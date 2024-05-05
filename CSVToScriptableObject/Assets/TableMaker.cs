@@ -38,8 +38,6 @@ public class TableMaker : MonoBehaviour
                 WriteCode(asset.name, header, types);
             }
 
-            EditorUtility.SetDirty(scriptableObj);
-
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
         }
@@ -152,6 +150,8 @@ public class TableMaker : MonoBehaviour
                     MethodInfo methodInfo = tableType.GetMethod("AddData");
                     methodInfo.Invoke(scriptableObj, new object[] { tableDataInstance });
                 }
+
+                EditorUtility.SetDirty(scriptableObj);
             }
 
             AssetDatabase.Refresh();
