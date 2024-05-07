@@ -84,12 +84,6 @@ public class TableMaker : MonoBehaviour
         }
 
         sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        sb.AppendLine("\tpublic void AddData(TableData data)");
-        sb.AppendLine("\t{");
-        sb.AppendLine("\t\tdatas.Add(data);");
-        sb.AppendLine("\t}");
 
         sb.AppendLine("}");
         sb.AppendLine();
