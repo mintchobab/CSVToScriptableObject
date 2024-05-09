@@ -41,7 +41,7 @@ public class TableMaker : MonoBehaviour
                 if (header.Length == 0 || types.Length == 0)
                     throw new Exception($"{nameof(TableMaker)} : Table Header or Type Error");
 
-                WriteCode(asset.name, header, types);
+                WriteCode(tableDataList, asset.name, header, types);
             }
 
             WriteTables(tableNames);
@@ -56,7 +56,7 @@ public class TableMaker : MonoBehaviour
     }
 
 
-    private static void WriteCode(string tableName, string[] header, string[] types)
+    private static void WriteCode(List<Dictionary<string, object>> tableDataList, string tableName, string[] header, string[] types)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -88,7 +88,28 @@ public class TableMaker : MonoBehaviour
 
         for (int i = 0; i < header.Length; i++)
         {
-            sb.AppendLine($"\t\tpublic {types[i]} {header[i]};");
+            if (!types[i].Equals("enum"))
+            {
+                sb.AppendLine($"\t\tpublic {types[i]} {header[i]};");
+            }
+            // enum type
+            else
+            {
+                string str = string.Empty;
+
+                foreach (Dictionary<string, object> data in tableDataList)
+                {
+                    if (!str.Contains(data[header[i]].ToString()))
+                    {
+                        str += $"{data[header[i]]}, ";
+                    }
+                }
+
+                if (!str.Equals(string.Empty))
+                    str = str.Substring(0, str.Length - 2);
+
+                sb.AppendLine($"\t\tpublic {types[i]} {header[i]} {{ {str} }};");
+            }
         }
 
         sb.AppendLine("\t}");
@@ -104,6 +125,67 @@ public class TableMaker : MonoBehaviour
 
 
         string textsaver = $"Assets/{tableName}.cs";
+
+        if (File.Exists(textsaver))
+        {
+            File.Delete(textsaver);
+        }
+
+        File.AppendAllText(textsaver, sb.ToString());
+    }
+
+
+    private static void WriteTables(List<string> tableNames)
+    {
+        if (tableNames.Count == 0)
+        {
+            Debug.LogError($"{nameof(TableMaker)} : Table Name Error");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.AppendLine("using UnityEngine;");
+        sb.AppendLine();
+
+        sb.AppendLine("public static class Tables");
+        sb.AppendLine("{");
+
+        foreach (string tableName in tableNames)
+        {
+            sb.AppendLine($"\tpublic static {tableName} {tableName};");
+        }
+
+        sb.AppendLine();
+
+        sb.AppendLine("\tstatic Tables()");
+        sb.AppendLine("\t{");
+
+        foreach (string tableName in tableNames)
+        {
+            sb.AppendLine($"\t\tif ({tableName} == null)");
+            sb.AppendLine($"\t\t\t{tableName} = Load<{tableName}>();");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        sb.AppendLine("\tpublic static T Load<T>() where T : ScriptableObject");
+        sb.AppendLine("\t{");
+
+        sb.AppendLine("\t\tT[] asset = Resources.LoadAll<T>(\"\");");
+        sb.AppendLine();
+        sb.AppendLine("\t\tif (asset == null || asset.Length != 1)");
+        sb.AppendLine("\t\t\tthrow new System.Exception($\"{nameof(Tables)} : Tables Load Error\");");
+        sb.AppendLine();
+
+        sb.AppendLine("\t\treturn asset[0];");
+        sb.AppendLine("\t}");
+
+        sb.AppendLine("}");
+
+        string textsaver = $"Assets/Tables.cs";
 
         if (File.Exists(textsaver))
         {
@@ -168,67 +250,7 @@ public class TableMaker : MonoBehaviour
         {
             Debug.LogError($"{nameof(TableMaker)} : {e.Message}" );
         }        
-    }
-
-    private static void WriteTables(List<string> tableNames)
-    {
-        if (tableNames.Count == 0)
-        {
-            Debug.LogError($"{nameof(TableMaker)} : Table Name Error");
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.AppendLine("using UnityEngine;");
-        sb.AppendLine();
-
-        sb.AppendLine("public static class Tables");
-        sb.AppendLine("{");
-
-        foreach (string tableName in tableNames)
-        {
-            sb.AppendLine($"\tpublic static {tableName} {tableName};");
-        }
-
-        sb.AppendLine();
-
-        sb.AppendLine("\tstatic Tables()");
-        sb.AppendLine("\t{");
-
-        foreach (string tableName in tableNames)
-        {
-            sb.AppendLine($"\t\tif ({tableName} == null)");
-            sb.AppendLine($"\t\t\t{tableName} = Load<{tableName}>();");
-            sb.AppendLine();
-        }
-
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        sb.AppendLine("\tpublic static T Load<T>() where T : ScriptableObject");
-        sb.AppendLine("\t{");
-
-        sb.AppendLine("\t\tT[] asset = Resources.LoadAll<T>(\"\");");
-        sb.AppendLine();
-        sb.AppendLine("\t\tif (asset == null || asset.Length != 1)");
-        sb.AppendLine("\t\t\tthrow new System.Exception($\"{nameof(Tables)} : Tables Load Error\");");
-        sb.AppendLine();
-
-        sb.AppendLine("\t\treturn asset[0];");
-        sb.AppendLine("\t}");
-
-        sb.AppendLine("}");
-
-        string textsaver = $"Assets/Tables.cs";
-
-        if (File.Exists(textsaver))
-        {
-            File.Delete(textsaver);
-        }
-
-        File.AppendAllText(textsaver, sb.ToString());
-    }
+    }    
 }
 
 

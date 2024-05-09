@@ -22,6 +22,7 @@ public class TestTableFirst : SingletonScriptableObject<TestTableFirst>
 		public string Name;
 		public string Desc;
 		public string IconPath;
+		public enum TestEnumType { TestEnum1, TestEnum2, TestEnum3, TestEnum4 };
 	}
 
 	public void AddData(TableData data)
